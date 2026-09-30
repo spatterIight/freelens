@@ -522,7 +522,10 @@ export class KubeObjectStore<
     const signal = abortController.signal;
 
     const callback: KubeApiWatchCallback<D> = (data, error) => {
-      if (!this.isLoaded || (error as Record<string, unknown> | null)?.type === "aborted") return;
+      // Chromium's fetch rejects an aborted watch with a DOMException, and the
+      // abort listener below has already run, so a retry scheduled here would
+      // never be cleared.
+      if (!this.isLoaded || signal.aborted || isAbortError(error)) return;
 
       if (error instanceof Response) {
         if (error.status === 404 || error.status === 401) {

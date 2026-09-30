@@ -12,6 +12,10 @@ export class WrappedAbortController extends AbortController {
   constructor(parent?: AbortController | undefined) {
     super();
 
+    if (parent?.signal.aborted) {
+      this.abort();
+    }
+
     parent?.signal.addEventListener("abort", () => {
       this.abort();
     });

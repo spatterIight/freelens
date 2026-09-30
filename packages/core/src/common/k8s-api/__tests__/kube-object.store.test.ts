@@ -4,11 +4,12 @@
  * Licensed under MIT License. See LICENSE in root directory for more information.
  */
 
+import { KubeJsonApi, NamespaceApi } from "@freelensapp/kube-api";
 import { KubeObject } from "@freelensapp/kube-object";
 import { noop } from "@freelensapp/utilities";
 import { KubeObjectStore } from "../kube-object.store";
 
-import type { FetchRequestInit as RequestInit } from "@freelensapp/json-api";
+import type { Fetch, FetchRequestInit as RequestInit } from "@freelensapp/json-api";
 import type { KubeApi } from "@freelensapp/kube-api";
 
 import type { KubeObjectStoreLoadingParams } from "../kube-object.store";
@@ -281,5 +282,50 @@ describe("KubeObjectStore", () => {
     expect(warnSpy).toHaveBeenCalled();
 
     warnSpy.mockRestore();
+  });
+
+  it("should not watch again after the subscription is cancelled", async () => {
+    vi.useFakeTimers();
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
+
+    // Like Chromium's fetch, which is pending until lens-proxy sends the
+    // headers of a watch, that is until the first event, and rejects with a
+    // DOMException when it is aborted before that.
+    const fetch = vi.fn<Fetch>(
+      (_url, init) =>
+        new Promise((_resolve, reject) => {
+          const abort = () => reject(new DOMException("The operation was aborted.", "AbortError"));
+
+          if (init?.signal?.aborted) {
+            abort();
+          } else {
+            init?.signal?.addEventListener("abort", abort);
+          }
+        }),
+    );
+    const api = new NamespaceApi({
+      logDebug: noop,
+      logError: noop,
+      logInfo: noop,
+      logWarn: noop,
+      maybeKubeApi: new KubeJsonApi(
+        { fetch, logger: { debug: noop, error: noop, info: noop, silly: noop, warn: noop } },
+        { apiBase: "/api-kube", serverAddress: "http://127.0.0.1:9999" },
+      ),
+    });
+    const store = new FakeKubeObjectStore(() => [], api as Partial<KubeApi<KubeObject>>);
+
+    api.setResourceVersion("", "1");
+    await store.loadAll({});
+
+    const unsubscribe = store.subscribe();
+
+    await vi.advanceTimersByTimeAsync(0);
+    unsubscribe();
+    await vi.advanceTimersByTimeAsync(60_000);
+
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 });

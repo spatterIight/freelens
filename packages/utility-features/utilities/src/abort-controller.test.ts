@@ -3,7 +3,17 @@
  * Licensed under MIT License. See LICENSE in root directory for more information.
  */
 
-import { isAbortError } from "./abort-controller";
+import { isAbortError, WrappedAbortController } from "./abort-controller";
+
+describe("WrappedAbortController", () => {
+  it("is aborted when its parent was aborted before it was created", () => {
+    const parent = new AbortController();
+
+    parent.abort();
+
+    expect(new WrappedAbortController(parent).signal.aborted).toBe(true);
+  });
+});
 
 describe("isAbortError", () => {
   it("matches a DOMException named AbortError", () => {
