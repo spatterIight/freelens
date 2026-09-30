@@ -605,6 +605,22 @@ describe("kubeconfig-sync.source tests", () => {
       manager = localDi.inject(kubeconfigSyncManagerInjectable);
     });
 
+    it("keeps the sync of a session path when the preferences change", async () => {
+      manager.syncForSession("/session/path");
+
+      await statMock.resolveSpecific(["/session/path"], {
+        isDirectory: () => false,
+      } as Stats);
+
+      manager.startSync();
+
+      runInAction(() => {
+        localKubeconfigSyncs.set("/some/path", {});
+      });
+
+      expect(strictGet(watchInstances, "/session/path").close).not.toHaveBeenCalled();
+    });
+
     // Test 1 – Runtime add via map.set()
     describe("when a path is added to kubeconfigSyncs after startSync", () => {
       beforeEach(() => {

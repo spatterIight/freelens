@@ -27,6 +27,7 @@ import { registerInjectables as registerFeaturesFeaturesFileSystemProvisionerMai
 import { registerInjectables as registerFeaturesFeaturesHelmReleasesMainInjectables } from "./features/helm-releases/main/register-injectables";
 import { registerInjectables as registerFeaturesFeaturesHotbarInjectables } from "./features/hotbar/register-injectables";
 import { registerInjectables as registerFeaturesFeaturesHotbarStorageMainInjectables } from "./features/hotbar/storage/main/register-injectables";
+import { registerInjectables as registerFeaturesFeaturesKubeconfigArgumentMainInjectables } from "./features/kubeconfig-argument/main/register-injectables";
 import { registerInjectables as registerFeaturesFeaturesLicensesMainInjectables } from "./features/licenses/main/register-injectables";
 import { registerInjectables as registerFeaturesFeaturesLicensesInjectables } from "./features/licenses/register-injectables";
 import { registerInjectables as registerFeaturesFeaturesPathPickingDialogMainInjectables } from "./features/path-picking-dialog/main/register-injectables";
@@ -71,6 +72,7 @@ export function registerInjectables(di: DiContainerForInjection): void {
   registerFeaturesFeaturesHelmReleasesMainInjectables(di);
   registerFeaturesFeaturesHotbarInjectables(di);
   registerFeaturesFeaturesHotbarStorageMainInjectables(di);
+  registerFeaturesFeaturesKubeconfigArgumentMainInjectables(di);
   registerFeaturesFeaturesLicensesMainInjectables(di);
   registerFeaturesFeaturesLicensesInjectables(di);
   registerFeaturesFeaturesPathPickingDialogMainInjectables(di);

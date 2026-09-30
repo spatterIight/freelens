@@ -25,6 +25,7 @@ interface KubeconfigSyncManagerDependencies {
 
 export class KubeconfigSyncManager {
   protected readonly sources = observable.map<string, [IComputedValue<CatalogEntity[]>, Disposer]>();
+  protected readonly sessionPaths = new Set<string>();
   protected syncListDisposer?: Disposer;
 
   constructor(protected readonly dependencies: KubeconfigSyncManagerDependencies) {
@@ -61,9 +62,19 @@ export class KubeconfigSyncManager {
     );
   }
 
+  /**
+   * Syncs a file or folder until the application quits, without saving it to
+   * the preferences.
+   */
+  @action
+  syncForSession(filePath: string): void {
+    this.sessionPaths.add(filePath);
+    this.startNewSync(filePath);
+  }
+
   @action
   private reconcile(currentPaths: string[]): void {
-    const desired = new Set([this.dependencies.directoryForKubeConfigs, ...currentPaths]);
+    const desired = new Set([this.dependencies.directoryForKubeConfigs, ...this.sessionPaths, ...currentPaths]);
 
     for (const filePath of Array.from(this.sources.keys())) {
       if (!desired.has(filePath)) {
